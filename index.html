@@ -6,27 +6,33 @@
     <title>Погода</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body, html {
+        html, body {
             height: 100%;
             margin: 0;
             overflow: hidden;
-            background: #0f172a; /* Темный фон */
+            background: #0f172a; /* Наш темный фон */
             display: flex;
             justify-content: center;
             align-items: center;
         }
-        /* Настраиваем картинку, чтобы она была по центру и не растягивалась криво */
+        /* Растягиваем картинку на весь экран и сохраняем пропорции */
         img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain; 
-            /* Легкая прозрачность, чтобы вписалась в фон */
-            opacity: 0.9; 
+            width: 100vw;
+            height: 100vh;
+            object-fit: contain; /* Картинка не будет искажаться, впишется по центру */
+            padding: 20px; /* Отступы от краев */
         }
     </style>
 </head>
 <body>
-    <!-- Запрашиваем готовую картинку погоды (формат PNG) -->
-    <img src="https://wttr.in/56.2194,42.0431.png?0&lang=ru&u" alt="Погода">
+    <!-- 
+      Параметры запроса:
+      ?0 - только текущая погода
+      &lang=ru - русский язык
+      &m - метрическая система (Цельсии и км/ч) 
+      &w=800 - ширина картинки в пикселях (делаем больше)
+      &background=0f172a - задаем цвет фона картинки под стать нашему сайту
+    -->
+    <img src="https://wttr.in/56.2194,42.0431.png?0&lang=ru&m&w=800&background=0f172a" alt="Погода">
 </body>
 </html>
