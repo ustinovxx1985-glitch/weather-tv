@@ -17,7 +17,6 @@
         }
         
         img {
-            /* Масштаб 50% от размера экрана */
             width: 50vw;
             height: 50vh;
             object-fit: contain; 
@@ -25,10 +24,19 @@
     </style>
 </head>
 <body>
-    <!-- 
-      Октябрьский:56.2194,42.0431 - подставляем название и точные координаты
-      &m - Цельсии и км/ч
-    -->
-    <img src="https://wttr.in/Октябрьский:56.2194,42.0431.png?0&lang=ru&m&background=0f172a" alt="Погода">
+    <!-- Добавили id="weatherImg", чтобы скрипт мог к ней обращаться -->
+    <img id="weatherImg" src="https://wttr.in/Октябрьский:56.2194,42.0431.png?0&lang=ru&m&background=0f172a" alt="Погода">
+
+    <script>
+        // Функция для принудительного обновления картинки
+        function updateWeather() {
+            const img = document.getElementById('weatherImg');
+            // Добавляем ?t=текущее_время, чтобы браузер не брал картинку из кэша
+            img.src = `https://wttr.in/Октябрьский:56.2194,42.0431.png?0&lang=ru&m&background=0f172a&t=${new Date().getTime()}`;
+        }
+
+        // Обновляем каждые 15 минут (900 000 миллисекунд)
+        setInterval(updateWeather, 15 * 60 * 1000);
+    </script>
 </body>
 </html>
