@@ -12,25 +12,25 @@
             overflow: hidden;
             background: #0f172a; /* Темный фон */
             display: flex;
-            justify-content: center;
-            align-items: center;
+            justify-content: center; /* Центрируем по горизонтали */
+            align-items: center;     /* Центрируем по вертикали */
         }
         
         img {
-            /* Увеличиваем картинку в 2.5 раза, чтобы она заняла весь экран */
-            transform: scale(2.5);
-            /* Ограничиваем максимальный размер, чтобы не было диких искажений */
-            max-width: 80vw; 
-            max-height: 80vh;
+            /* Заставляем картинку занять 95% экрана, сохраняя пропорции */
+            width: 95vw;
+            height: 95vh;
             object-fit: contain; 
+            /* Убрали transform: scale, теперь картинка не обрезается */
         }
     </style>
 </head>
 <body>
     <!-- 
-      &m - метрическая система (Цельсии, км/ч)
-      &w=1200 - запрашиваем картинку шириной 1200px (четкая)
+      &m - Цельсии и км/ч
+      &lang=ru - русский язык
+      &background=0f172a - цвет фона картинки совпадает с фоном сайта
     -->
-    <img src="https://wttr.in/56.2194,42.0431.png?0&lang=ru&m&w=1200&background=0f172a" alt="Погода">
+    <img src="https://wttr.in/56.2194,42.0431.png?0&lang=ru&m&background=0f172a" alt="Погода">
 </body>
 </html>
