@@ -43,79 +43,52 @@
     </div>
 
     <script>
-        // Координаты поселка Октябрьский
         const lat = 56.2194;
         const lon = 42.0431;
 
-        // Запрос к API Яндекса (GraphQL)
-        const query = `
-        {
-          weatherByPoint(request: { lat: ${lat}, lon: ${lon} }) {
-            now {
-              temperature
-              condition
-              windSpeed
-            }
-          }
-        }`;
-
-        // Словарь для перевода погодных условий Яндекса в иконки и текст
         const weatherMap = {
-            'clear': { icon: '☀️', desc: 'Ясно' },
-            'partly-cloudy': { icon: '🌤️', desc: 'Малооблачно' },
-            'cloudy': { icon: '⛅', desc: 'Облачно' },
-            'overcast': { icon: '☁️', desc: 'Пасмурно' },
-            'drizzle': { icon: '🌦️', desc: 'Морось' },
-            'light-rain': { icon: '🌦️', desc: 'Небольшой дождь' },
-            'rain': { icon: '🌧️', desc: 'Дождь' },
-            'moderate-rain': { icon: '🌧️', desc: 'Умеренный дождь' },
-            'heavy-rain': { icon: '🌧️', desc: 'Сильный дождь' },
-            'showers': { icon: '🌦️', desc: 'Ливневые дожди' },
-            'wet-snow': { icon: '🌨️', desc: 'Дождь со снегом' },
-            'light-snow': { icon: '🌨️', desc: 'Небольшой снег' },
-            'snow': { icon: '❄️', desc: 'Снег' },
-            'snow-showers': { icon: '❄️', desc: 'Снегопад' },
-            'hail': { icon: '🧊', desc: 'Град' },
-            'thunderstorm': { icon: '⛈️', desc: 'Гроза' }
+            0: { icon: "☀️", desc: "Ясно" },
+            1: { icon: "🌤️", desc: "Преимущественно ясно" },
+            2: { icon: "⛅", desc: "Переменная облачность" },
+            3: { icon: "☁️", desc: "Пасмурно" },
+            45: { icon: "🌫️", desc: "Туман" },
+            51: { icon: "🌦️", desc: "Лёгкая морось" },
+            61: { icon: "🌦️", desc: "Небольшой дождь" },
+            71: { icon: "🌨️", desc: "Небольшой снег" },
+            95: { icon: "⛈️", desc: "Гроза" }
         };
 
         async function fetchWeather() {
             try {
-                // Обращаемся к нашему прокси на Cloudflare
-                const response = await fetch('https://weather-proxy.ustinovxx1985.workers.dev/', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query: query })
-                });
-
+                // Запрос к Open-Meteo через прокси allorigins.win
+                const targetUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=Europe/Moscow`;
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+                
+                const response = await fetch(proxyUrl);
                 if (!response.ok) throw new Error(`HTTP error ${response.status}`);
                 
                 const data = await response.json();
+                const current = data.current_weather;
                 
-                // Извлекаем данные из ответа Яндекса
-                const weather = data.data.weatherByPoint.now;
-                
-                const temp = Math.round(weather.temperature);
-                const condition = weather.condition;
-                const wind = weather.windSpeed;
-                const info = weatherMap[condition] || { icon: '🌡️', desc: condition };
+                const temp = Math.round(current.temperature);
+                const wind = current.windspeed;
+                const code = current.weathercode;
+                const info = weatherMap[code] || { icon: "🌡️", desc: "Неизвестно" };
 
-                // Обновляем элементы на странице
                 document.getElementById("temp").innerHTML = `${temp}<sup>°C</sup>`;
                 document.getElementById("icon").textContent = info.icon;
                 document.getElementById("desc").textContent = info.desc;
-                document.getElementById("wind").textContent = `💨 Ветер: ${wind} м/с`;
+                document.getElementById("wind").textContent = `💨 Ветер: ${wind} км/ч`;
 
             } catch (error) {
-                console.error("Ошибка загрузки погоды:", error);
+                console.error("Ошибка:", error);
                 document.getElementById("desc").textContent = "Ошибка данных";
                 document.getElementById("icon").textContent = "⚠️";
             }
         }
 
         fetchWeather();
-        // Обновляем каждые 30 минут
-        setInterval(fetchWeather, 30 * 60 * 1000); 
+        setInterval(fetchWeather, 15 * 60 * 1000); 
     </script>
 </body>
 </html>
