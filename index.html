@@ -6,89 +6,23 @@
     <title>Погода</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: linear-gradient(160deg, #0f172a 0%, #1e293b 100%);
-            color: #f8fafc;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            text-align: center;
-            padding: 20px;
+        body, html {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            background: #0f172a; /* Темный фон на случай загрузки */
         }
-        .widget {
-            background: rgba(255, 255, 255, 0.06);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 32px;
-            padding: 60px 80px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            /* Небольшая стилизация, чтобы вписать в дизайн */
+            filter: invert(1) hue-rotate(180deg) contrast(0.9) brightness(0.8);
         }
-        #city { font-size: 2.5rem; font-weight: 500; letter-spacing: 0.05em; opacity: 0.8; margin-bottom: 10px; }
-        #icon { font-size: 7rem; line-height: 1; margin: 10px 0; }
-        #temp { font-size: 6rem; font-weight: 200; line-height: 1.1; }
-        #temp sup { font-size: 2.5rem; font-weight: 300; vertical-align: super; opacity: 0.7; }
-        #desc { font-size: 1.8rem; font-weight: 300; opacity: 0.8; margin-top: 10px; }
-        #wind { font-size: 1.4rem; font-weight: 300; opacity: 0.6; margin-top: 30px; }
     </style>
 </head>
 <body>
-    <div class="widget">
-        <div id="city">Октябрьский</div>
-        <div id="icon">⏳</div>
-        <div id="temp">--<sup>°C</sup></div>
-        <div id="desc">Загрузка...</div>
-        <div id="wind"></div>
-    </div>
-
-    <script>
-        const lat = 56.2194;
-        const lon = 42.0431;
-
-        const weatherMap = {
-            0: { icon: "☀️", desc: "Ясно" },
-            1: { icon: "🌤️", desc: "Преимущественно ясно" },
-            2: { icon: "⛅", desc: "Переменная облачность" },
-            3: { icon: "☁️", desc: "Пасмурно" },
-            45: { icon: "🌫️", desc: "Туман" },
-            51: { icon: "🌦️", desc: "Лёгкая морось" },
-            61: { icon: "🌦️", desc: "Небольшой дождь" },
-            71: { icon: "🌨️", desc: "Небольшой снег" },
-            95: { icon: "⛈️", desc: "Гроза" }
-        };
-
-        async function fetchWeather() {
-            try {
-                // Прямой запрос к Open-Meteo, но через прокси proxy.cors.dev
-                const targetUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=Europe/Moscow`;
-                const proxyUrl = `https://proxy.cors.dev/${targetUrl}`;
-                
-                const response = await fetch(proxyUrl);
-                if (!response.ok) throw new Error(`HTTP error ${response.status}`);
-                
-                const data = await response.json();
-                const current = data.current_weather;
-                
-                const temp = Math.round(current.temperature);
-                const wind = current.windspeed;
-                const code = current.weathercode;
-                const info = weatherMap[code] || { icon: "🌡️", desc: "Неизвестно" };
-
-                document.getElementById("temp").innerHTML = `${temp}<sup>°C</sup>`;
-                document.getElementById("icon").textContent = info.icon;
-                document.getElementById("desc").textContent = info.desc;
-                document.getElementById("wind").textContent = `💨 Ветер: ${wind} км/ч`;
-
-            } catch (error) {
-                console.error("Ошибка:", error);
-                document.getElementById("desc").textContent = "Ошибка данных";
-                document.getElementById("icon").textContent = "⚠️";
-            }
-        }
-
-        fetchWeather();
-        setInterval(fetchWeather, 15 * 60 * 1000); 
-    </script>
+    <!-- Загружаем страницу wttr.in напрямую, без JavaScript и прокси -->
+    <iframe src="https://wttr.in/56.2194,42.0431?0&lang=ru&format=4" frameborder="0"></iframe>
 </body>
 </html>
