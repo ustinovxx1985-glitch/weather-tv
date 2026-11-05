@@ -47,64 +47,75 @@
         const lat = 56.2194;
         const lon = 42.0431;
 
-        // Сопоставление кодов погоды Open-Meteo
+        // Запрос к API Яндекса (GraphQL)
+        const query = `
+        {
+          weatherByPoint(request: { lat: ${lat}, lon: ${lon} }) {
+            now {
+              temperature
+              condition
+              windSpeed
+            }
+          }
+        }`;
+
+        // Словарь для перевода погодных условий Яндекса в иконки и текст
         const weatherMap = {
-            0: { icon: "☀️", desc: "Ясно" },
-            1: { icon: "🌤️", desc: "Преимущественно ясно" },
-            2: { icon: "⛅", desc: "Переменная облачность" },
-            3: { icon: "☁️", desc: "Пасмурно" },
-            45: { icon: "🌫️", desc: "Туман" },
-            48: { icon: "🌫️", desc: "Туман с изморозью" },
-            51: { icon: "🌦️", desc: "Лёгкая морось" },
-            53: { icon: "🌦️", desc: "Умеренная морось" },
-            55: { icon: "🌧️", desc: "Сильная морось" },
-            61: { icon: "🌦️", desc: "Небольшой дождь" },
-            63: { icon: "🌧️", desc: "Умеренный дождь" },
-            65: { icon: "🌧️", desc: "Сильный дождь" },
-            71: { icon: "🌨️", desc: "Небольшой снег" },
-            73: { icon: "❄️", desc: "Умеренный снег" },
-            75: { icon: "❄️", desc: "Сильный снег" },
-            77: { icon: "❄️", desc: "Снежная крупа" },
-            80: { icon: "🌦️", desc: "Небольшие ливни" },
-            81: { icon: "🌧️", desc: "Умеренные ливни" },
-            82: { icon: "⛈️", desc: "Сильные ливни" },
-            95: { icon: "⛈️", desc: "Гроза" },
-            96: { icon: "⛈️", desc: "Гроза с градом" },
-            99: { icon: "⛈️", desc: "Сильная гроза с градом" }
+            'clear': { icon: '☀️', desc: 'Ясно' },
+            'partly-cloudy': { icon: '🌤️', desc: 'Малооблачно' },
+            'cloudy': { icon: '⛅', desc: 'Облачно' },
+            'overcast': { icon: '☁️', desc: 'Пасмурно' },
+            'drizzle': { icon: '🌦️', desc: 'Морось' },
+            'light-rain': { icon: '🌦️', desc: 'Небольшой дождь' },
+            'rain': { icon: '🌧️', desc: 'Дождь' },
+            'moderate-rain': { icon: '🌧️', desc: 'Умеренный дождь' },
+            'heavy-rain': { icon: '🌧️', desc: 'Сильный дождь' },
+            'showers': { icon: '🌦️', desc: 'Ливневые дожди' },
+            'wet-snow': { icon: '🌨️', desc: 'Дождь со снегом' },
+            'light-snow': { icon: '🌨️', desc: 'Небольшой снег' },
+            'snow': { icon: '❄️', desc: 'Снег' },
+            'snow-showers': { icon: '❄️', desc: 'Снегопад' },
+            'hail': { icon: '🧊', desc: 'Град' },
+            'thunderstorm': { icon: '⛈️', desc: 'Гроза' }
         };
 
         async function fetchWeather() {
             try {
-                const url = `https://api.allorigins.win/raw?url=` + encodeURIComponent(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=Europe/Moscow`);
+                // Обращаемся к нашему прокси на Cloudflare
                 const response = await fetch('https://weather-proxy.ustinovxx1985.workers.dev/', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query: query })
-});
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: query })
+                });
+
                 if (!response.ok) throw new Error(`HTTP error ${response.status}`);
                 
                 const data = await response.json();
-                const current = data.current_weather;
                 
-                const temp = Math.round(current.temperature);
-                const wind = current.windspeed;
-                const code = current.weathercode;
-                const info = weatherMap[code] || { icon: "🌡️", desc: "Неизвестно" };
+                // Извлекаем данные из ответа Яндекса
+                const weather = data.data.weatherByPoint.now;
+                
+                const temp = Math.round(weather.temperature);
+                const condition = weather.condition;
+                const wind = weather.windSpeed;
+                const info = weatherMap[condition] || { icon: '🌡️', desc: condition };
 
+                // Обновляем элементы на странице
                 document.getElementById("temp").innerHTML = `${temp}<sup>°C</sup>`;
                 document.getElementById("icon").textContent = info.icon;
                 document.getElementById("desc").textContent = info.desc;
-                document.getElementById("wind").textContent = `💨 Ветер: ${wind} км/ч`;
+                document.getElementById("wind").textContent = `💨 Ветер: ${wind} м/с`;
 
             } catch (error) {
-                console.error("Ошибка:", error);
+                console.error("Ошибка загрузки погоды:", error);
                 document.getElementById("desc").textContent = "Ошибка данных";
                 document.getElementById("icon").textContent = "⚠️";
             }
         }
 
         fetchWeather();
-        setInterval(fetchWeather, 15 * 60 * 1000); // Обновление каждые 15 минут
+        // Обновляем каждые 30 минут
+        setInterval(fetchWeather, 30 * 60 * 1000); 
     </script>
 </body>
 </html>
