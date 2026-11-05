@@ -75,7 +75,7 @@
 
         async function fetchWeather() {
             try {
-                const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=Europe/Moscow`;
+                const url = `https://api.allorigins.win/raw?url=` + encodeURIComponent(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=Europe/Moscow`);
                 const response = await fetch(url);
                 if (!response.ok) throw new Error(`HTTP error ${response.status}`);
                 
