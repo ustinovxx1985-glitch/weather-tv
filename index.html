@@ -12,24 +12,23 @@
             overflow: hidden;
             background: #0f172a; /* Темный фон */
             display: flex;
-            justify-content: center; /* Центрируем по горизонтали */
-            align-items: center;     /* Центрируем по вертикали */
+            justify-content: center; 
+            align-items: center;     
         }
         
         img {
-            /* Уменьшили масштаб до 75% от размера экрана */
-            width: 75vw;
-            height: 75vh;
-            object-fit: contain; /* Сохраняет пропорции картинки */
+            /* Масштаб 50% от размера экрана */
+            width: 50vw;
+            height: 50vh;
+            object-fit: contain; 
         }
     </style>
 </head>
 <body>
     <!-- 
+      Октябрьский:56.2194,42.0431 - подставляем название и точные координаты
       &m - Цельсии и км/ч
-      &lang=ru - русский язык
-      &background=0f172a - цвет фона картинки совпадает с фоном сайта
     -->
-    <img src="https://wttr.in/56.2194,42.0431.png?0&lang=ru&m&background=0f172a" alt="Погода">
+    <img src="https://wttr.in/Октябрьский:56.2194,42.0431.png?0&lang=ru&m&background=0f172a" alt="Погода">
 </body>
 </html>
