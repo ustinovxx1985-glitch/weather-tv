@@ -43,31 +43,42 @@
     </div>
 
     <script>
+        const lat = 56.2194;
+        const lon = 42.0431;
+
+        const weatherMap = {
+            0: { icon: "☀️", desc: "Ясно" },
+            1: { icon: "🌤️", desc: "Преимущественно ясно" },
+            2: { icon: "⛅", desc: "Переменная облачность" },
+            3: { icon: "☁️", desc: "Пасмурно" },
+            45: { icon: "🌫️", desc: "Туман" },
+            51: { icon: "🌦️", desc: "Лёгкая морось" },
+            61: { icon: "🌦️", desc: "Небольшой дождь" },
+            71: { icon: "🌨️", desc: "Небольшой снег" },
+            95: { icon: "⛈️", desc: "Гроза" }
+        };
+
         async function fetchWeather() {
             try {
-                // Запрос к российскому API, который не блокируется
-                const url = 'https://xn--b1aaibpvbjvx6kj.xn--p1ai/api-weather?city=Октябрьский';
-                const response = await fetch(url);
+                // Прямой запрос к Open-Meteo, но через прокси proxy.cors.dev
+                const targetUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=Europe/Moscow`;
+                const proxyUrl = `https://proxy.cors.dev/${targetUrl}`;
+                
+                const response = await fetch(proxyUrl);
                 if (!response.ok) throw new Error(`HTTP error ${response.status}`);
                 
                 const data = await response.json();
+                const current = data.current_weather;
                 
-                // Данные приходят в полях temp и condition
-                const temp = data.temp; // например, "+22"
-                const condition = data.condition; // например, "ясно"
-
-                // Простое сопоставление условий с иконками
-                let icon = '🌡️';
-                if (condition.includes('ясно')) icon = '☀️';
-                else if (condition.includes('облачно')) icon = '☁️';
-                else if (condition.includes('дождь')) icon = '🌧️';
-                else if (condition.includes('снег')) icon = '❄️';
+                const temp = Math.round(current.temperature);
+                const wind = current.windspeed;
+                const code = current.weathercode;
+                const info = weatherMap[code] || { icon: "🌡️", desc: "Неизвестно" };
 
                 document.getElementById("temp").innerHTML = `${temp}<sup>°C</sup>`;
-                document.getElementById("icon").textContent = icon;
-                document.getElementById("desc").textContent = condition;
-                // Ветер в этом API может отсутствовать, оставляем пустым
-                document.getElementById("wind").textContent = '';
+                document.getElementById("icon").textContent = info.icon;
+                document.getElementById("desc").textContent = info.desc;
+                document.getElementById("wind").textContent = `💨 Ветер: ${wind} км/ч`;
 
             } catch (error) {
                 console.error("Ошибка:", error);
