@@ -6,37 +6,129 @@
     <title>Погода</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body, html {
-            height: 100%;
-            margin: 0;
-            overflow: hidden;
-            background: #0f172a; /* Темный фон */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #1c1c1e; /* Темный фон в стиле Яндекса */
+            color: #ffffff;
             display: flex;
-            justify-content: center; 
-            align-items: center;     
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
         }
-        
-        img {
-            width: 50vw;
-            height: 50vh;
-            object-fit: contain; 
+        .widget {
+            text-align: center;
+            width: 100%;
+            max-width: 800px;
         }
+        .city { font-size: 2rem; color: #a1a1a6; margin-bottom: 10px; }
+        .main-info { display: flex; justify-content: center; align-items: center; gap: 30px; margin-bottom: 20px; }
+        .temp { font-size: 8rem; font-weight: 200; line-height: 1; }
+        .desc { font-size: 2.5rem; text-align: left; }
+        .details {
+            display: flex;
+            justify-content: center;
+            gap: 60px;
+            font-size: 1.8rem;
+            margin-top: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px 40px;
+            border-radius: 20px;
+        }
+        .detail-item { display: flex; flex-direction: column; gap: 10px; }
+        .detail-label { font-size: 1.2rem; color: #a1a1a6; }
+        .detail-value { font-weight: 500; }
     </style>
 </head>
 <body>
-    <!-- Добавили id="weatherImg", чтобы скрипт мог к ней обращаться -->
-    <img id="weatherImg" src="https://wttr.in/Октябрьский:56.2194,42.0431.png?0&lang=ru&m&background=0f172a" alt="Погода">
+    <div class="widget">
+        <div class="city">Октябрьский</div>
+        <div class="main-info">
+            <div class="temp" id="temp">--</div>
+            <div class="desc" id="desc">Загрузка...</div>
+        </div>
+        
+        <div class="details">
+            <div class="detail-item">
+                <span class="detail-label">Ветер</span>
+                <span class="detail-value" id="wind">-- м/с</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Давление</span>
+                <span class="detail-value" id="pressure">-- мм</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Влажность</span>
+                <span class="detail-value" id="humidity">-- %</span>
+            </div>
+        </div>
+    </div>
 
     <script>
-        // Функция для принудительного обновления картинки
-        function updateWeather() {
-            const img = document.getElementById('weatherImg');
-            // Добавляем ?t=текущее_время, чтобы браузер не брал картинку из кэша
-            img.src = `https://wttr.in/Октябрьский:56.2194,42.0431.png?0&lang=ru&m&background=0f172a&t=${new Date().getTime()}`;
+        const query = `
+        {
+          weatherByPoint(request: { lat: 56.2194, lon: 42.0431 }) {
+            now {
+              temperature
+              condition
+              windSpeed
+              pressureMm
+              humidity
+            }
+          }
+        }`;
+
+        // Расшифровка погодных условий Яндекса
+        const conditions = {
+            'clear': 'Ясно',
+            'partly-cloudy': 'Малооблачно',
+            'cloudy': 'Облачно',
+            'overcast': 'Пасмурно',
+            'drizzle': 'Морось',
+            'light-rain': 'Небольшой дождь',
+            'rain': 'Дождь',
+            'moderate-rain': 'Умеренный дождь',
+            'heavy-rain': 'Сильный дождь',
+            'continuous-heavy-rain': 'Ливень',
+            'showers': 'Ливневые дожди',
+            'wet-snow': 'Дождь со снегом',
+            'light-snow': 'Небольшой снег',
+            'snow': 'Снег',
+            'snow-showers': 'Снегопад',
+            'hail': 'Град',
+            'thunderstorm': 'Гроза',
+            'thunderstorm-with-rain': 'Гроза с дождем',
+            'thunderstorm-with-hail': 'Гроза с градом'
+        };
+
+        async function fetchWeather() {
+            try {
+                // Обращаемся к вашему Cloudflare Worker, который проксирует запрос в Яндекс
+                const response = await fetch('https://weather-proxy.ustinovxx1985.workers.dev/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query })
+                });
+
+                const data = await response.json();
+                const now = data.data.weatherByPoint.now;
+
+                // Обновляем данные на экране
+                document.getElementById('temp').textContent = `${now.temperature}°`;
+                document.getElementById('desc').textContent = conditions[now.condition] || now.condition;
+                document.getElementById('wind').textContent = `${now.windSpeed} м/с`;
+                document.getElementById('pressure').textContent = `${now.pressureMm} мм`;
+                document.getElementById('humidity').textContent = `${now.humidity} %`;
+
+            } catch (error) {
+                console.error("Ошибка загрузки:", error);
+                // Если на компьютере не грузится (из-за блокировки), на ТВ с GoodbyeDPI всё заработает
+                document.getElementById('desc').textContent = "Ошибка связи";
+            }
         }
 
-        // Обновляем каждые 15 минут (900 000 миллисекунд)
-        setInterval(updateWeather, 15 * 60 * 1000);
+        fetchWeather();
+        setInterval(fetchWeather, 15 * 60 * 1000); // Обновление каждые 15 минут
     </script>
 </body>
 </html>
