@@ -8,127 +8,97 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: #1c1c1e; /* Темный фон в стиле Яндекса */
-            color: #ffffff;
+            background: linear-gradient(160deg, #0f172a 0%, #1e293b 100%);
+            color: #f8fafc;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
+            min-height: 100vh;
+            text-align: center;
+            padding: 20px;
         }
         .widget {
-            text-align: center;
-            width: 100%;
-            max-width: 800px;
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 32px;
+            padding: 60px 80px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
-        .city { font-size: 2rem; color: #a1a1a6; margin-bottom: 10px; }
-        .main-info { display: flex; justify-content: center; align-items: center; gap: 30px; margin-bottom: 20px; }
-        .temp { font-size: 8rem; font-weight: 200; line-height: 1; }
-        .desc { font-size: 2.5rem; text-align: left; }
-        .details {
-            display: flex;
-            justify-content: center;
-            gap: 60px;
-            font-size: 1.8rem;
-            margin-top: 40px;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 20px 40px;
-            border-radius: 20px;
-        }
-        .detail-item { display: flex; flex-direction: column; gap: 10px; }
-        .detail-label { font-size: 1.2rem; color: #a1a1a6; }
-        .detail-value { font-weight: 500; }
+        #city { font-size: 2.5rem; font-weight: 500; letter-spacing: 0.05em; opacity: 0.8; margin-bottom: 10px; }
+        #icon { font-size: 7rem; line-height: 1; margin: 10px 0; }
+        #temp { font-size: 6rem; font-weight: 200; line-height: 1.1; }
+        #temp sup { font-size: 2.5rem; font-weight: 300; vertical-align: super; opacity: 0.7; }
+        #desc { font-size: 1.8rem; font-weight: 300; opacity: 0.8; margin-top: 10px; }
+        #wind { font-size: 1.4rem; font-weight: 300; opacity: 0.6; margin-top: 30px; }
     </style>
 </head>
 <body>
     <div class="widget">
-        <div class="city">Октябрьский</div>
-        <div class="main-info">
-            <div class="temp" id="temp">--</div>
-            <div class="desc" id="desc">Загрузка...</div>
-        </div>
-        
-        <div class="details">
-            <div class="detail-item">
-                <span class="detail-label">Ветер</span>
-                <span class="detail-value" id="wind">-- м/с</span>
-            </div>
-            <div class="detail-item">
-                <span class="detail-label">Давление</span>
-                <span class="detail-value" id="pressure">-- мм</span>
-            </div>
-            <div class="detail-item">
-                <span class="detail-label">Влажность</span>
-                <span class="detail-value" id="humidity">-- %</span>
-            </div>
-        </div>
+        <div id="city">Октябрьский</div>
+        <div id="icon">⏳</div>
+        <div id="temp">--<sup>°C</sup></div>
+        <div id="desc">Загрузка...</div>
+        <div id="wind"></div>
     </div>
 
     <script>
-        const query = `
-        {
-          weatherByPoint(request: { lat: 56.2194, lon: 42.0431 }) {
-            now {
-              temperature
-              condition
-              windSpeed
-              pressureMm
-              humidity
-            }
-          }
-        }`;
+        const lat = 56.2194;
+        const lon = 42.0431;
 
-        // Расшифровка погодных условий Яндекса
-        const conditions = {
-            'clear': 'Ясно',
-            'partly-cloudy': 'Малооблачно',
-            'cloudy': 'Облачно',
-            'overcast': 'Пасмурно',
-            'drizzle': 'Морось',
-            'light-rain': 'Небольшой дождь',
-            'rain': 'Дождь',
-            'moderate-rain': 'Умеренный дождь',
-            'heavy-rain': 'Сильный дождь',
-            'continuous-heavy-rain': 'Ливень',
-            'showers': 'Ливневые дожди',
-            'wet-snow': 'Дождь со снегом',
-            'light-snow': 'Небольшой снег',
-            'snow': 'Снег',
-            'snow-showers': 'Снегопад',
-            'hail': 'Град',
-            'thunderstorm': 'Гроза',
-            'thunderstorm-with-rain': 'Гроза с дождем',
-            'thunderstorm-with-hail': 'Гроза с градом'
+        const weatherMap = {
+            0: { icon: "☀️", desc: "Ясно" },
+            1: { icon: "🌤️", desc: "Преимущественно ясно" },
+            2: { icon: "⛅", desc: "Переменная облачность" },
+            3: { icon: "☁️", desc: "Пасмурно" },
+            45: { icon: "🌫️", desc: "Туман" },
+            48: { icon: "🌫️", desc: "Туман с изморозью" },
+            51: { icon: "🌦️", desc: "Лёгкая морось" },
+            53: { icon: "🌦️", desc: "Умеренная морось" },
+            55: { icon: "🌧️", desc: "Сильная морось" },
+            61: { icon: "🌦️", desc: "Небольшой дождь" },
+            63: { icon: "🌧️", desc: "Умеренный дождь" },
+            65: { icon: "🌧️", desc: "Сильный дождь" },
+            71: { icon: "🌨️", desc: "Небольшой снег" },
+            73: { icon: "❄️", desc: "Умеренный снег" },
+            75: { icon: "❄️", desc: "Сильный снег" },
+            77: { icon: "❄️", desc: "Снежная крупа" },
+            80: { icon: "🌦️", desc: "Небольшие ливни" },
+            81: { icon: "🌧️", desc: "Умеренные ливни" },
+            82: { icon: "⛈️", desc: "Сильные ливни" },
+            95: { icon: "⛈️", desc: "Гроза" },
+            96: { icon: "⛈️", desc: "Гроза с градом" },
+            99: { icon: "⛈️", desc: "Сильная гроза с градом" }
         };
 
         async function fetchWeather() {
             try {
-                // Обращаемся к вашему Cloudflare Worker, который проксирует запрос в Яндекс
-                const response = await fetch('https://weather-proxy.ustinovxx1985.workers.dev/', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query })
-                });
-
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=Europe/Moscow`;
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+                
                 const data = await response.json();
-                const now = data.data.weatherByPoint.now;
+                const current = data.current_weather;
+                
+                const temp = Math.round(current.temperature);
+                const wind = current.windspeed;
+                const code = current.weathercode;
+                const info = weatherMap[code] || { icon: "🌡️", desc: "Неизвестно" };
 
-                // Обновляем данные на экране
-                document.getElementById('temp').textContent = `${now.temperature}°`;
-                document.getElementById('desc').textContent = conditions[now.condition] || now.condition;
-                document.getElementById('wind').textContent = `${now.windSpeed} м/с`;
-                document.getElementById('pressure').textContent = `${now.pressureMm} мм`;
-                document.getElementById('humidity').textContent = `${now.humidity} %`;
+                document.getElementById("temp").innerHTML = `${temp}<sup>°C</sup>`;
+                document.getElementById("icon").textContent = info.icon;
+                document.getElementById("desc").textContent = info.desc;
+                document.getElementById("wind").textContent = `💨 Ветер: ${wind} км/ч`;
 
             } catch (error) {
-                console.error("Ошибка загрузки:", error);
-                // Если на компьютере не грузится (из-за блокировки), на ТВ с GoodbyeDPI всё заработает
-                document.getElementById('desc').textContent = "Ошибка связи";
+                console.error("Ошибка:", error);
+                document.getElementById("desc").textContent = "Ошибка данных";
+                document.getElementById("icon").textContent = "⚠️";
             }
         }
 
         fetchWeather();
-        setInterval(fetchWeather, 15 * 60 * 1000); // Обновление каждые 15 минут
+        setInterval(fetchWeather, 15 * 60 * 1000); 
     </script>
 </body>
 </html>
