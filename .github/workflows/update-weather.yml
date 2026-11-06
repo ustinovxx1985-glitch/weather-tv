@@ -22,22 +22,35 @@ jobs:
           curl -s --fail \
             -H "X-Yandex-Weather-Key: $YANDEX_API_KEY" \
             "https://api.weather.yandex.ru/v2/forecast?lat=56.2194&lon=42.0431&lang=ru_RU&hours=false&extra=false" \
-            -o weather-raw.json
-          echo "Ответ от Яндекса:"
+            -o weather-raw.json || echo '{}' > weather-raw.json
+          echo "Ответ Яндекса:"
           cat weather-raw.json
+
+      - name: Fetch backup from Open-Meteo
+        run: |
+          curl -s --fail \
+            "https://api.open-meteo.com/v1/forecast?latitude=56.2194&longitude=42.0431&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,wind_direction_10m,surface_pressure&wind_speed_unit=ms&timezone=Europe%2FMoscow" \
+            -o om-raw.json || echo '{}' > om-raw.json
+          echo "Ответ Open-Meteo:"
+          cat om-raw.json
 
       - name: Build weather.json
         run: |
-          jq '{
-            temperature: (.fact.temperature // .fact.feels_like),
-            feelsLike: (.fact.feels_like // .fact.temperature),
-            humidity: .fact.humidity,
-            windSpeed: .fact.wind_speed,
-            windDir: .fact.wind_dir,
-            pressureMm: .fact.pressure_mm,
-            condition: .fact.condition,
-            updatedAt: ((now + 10800) | strftime("%d.%m.%Y %H:%M"))
-          }' weather-raw.json > weather-new.json
+          jq -s '
+            def r: if type == "number" then round else . end;
+            (.[0].fact // {}) as $f |
+            (.[1].current // {}) as $c |
+            {
+              temperature: (($f.temperature // $c.temperature_2m) | r),
+              feelsLike: (($f.feels_like // $c.apparent_temperature) | r),
+              humidity: (($f.humidity // $c.relative_humidity_2m) | r),
+              windSpeed: ($f.wind_speed // $c.wind_speed_10m),
+              windDir: ($f.wind_dir // (["n","ne","e","se","s","sw","w","nw"][((($c.wind_direction_10m // 0) + 22.5) / 45 | floor) % 8])),
+              pressureMm: ($f.pressure_mm // (if $c.surface_pressure then (($c.surface_pressure * 0.750062) | round) else null end)),
+              condition: $f.condition,
+              updatedAt: ((now + 10800) | strftime("%d.%m.%Y %H:%M"))
+            }
+          ' weather-raw.json om-raw.json > weather-new.json
           echo "Свежие данные:"
           cat weather-new.json
           if [ -f weather.json ]; then
