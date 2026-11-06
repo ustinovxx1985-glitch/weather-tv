@@ -1,10 +1,10 @@
 {
-  "temperature": -3,
+  "temperature": 2,
   "feelsLike": -3,
   "humidity": 96,
-  "windSpeed": 3.5,
+  "windSpeed": 3.6,
   "windDir": "nw",
-  "pressureMm": null,
+  "pressureMm": 740,
   "condition": "wet-snow",
-  "updatedAt": "06.11.2026 10:57"
+  "updatedAt": "06.11.2026 11:08"
 }
