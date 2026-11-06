@@ -122,7 +122,7 @@ async function loadWeather(){
     document.getElementById('humidity').textContent = w.humidity;
     document.getElementById('wind').textContent = w.windSpeed;
     document.getElementById('windDir').textContent = 'м/с, ' + (WIND_DIR[w.windDir] || '');
-    document.getElementById('pressure').textContent = w.pressureMm;
+    document.getElementById('pressure').textContent = (w.pressureMm === null || w.pressureMm === undefined) ? '—' : w.pressureMm;
     const c = CONDITIONS[String(w.condition || '').replace(/-/g, '_')] || ['🌡️', w.condition || ''];
     document.getElementById('conditionIcon').textContent = c[0];
     document.getElementById('condition').textContent = c[1];
