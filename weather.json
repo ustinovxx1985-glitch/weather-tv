@@ -1,10 +1,10 @@
 {
   "temperature": 1,
-  "feelsLike": -4,
-  "humidity": 93,
-  "windSpeed": 4.3,
+  "feelsLike": -2,
+  "humidity": 99,
+  "windSpeed": 1,
   "windDir": "nw",
-  "pressureMm": 743,
+  "pressureMm": 744,
   "condition": "overcast",
-  "updatedAt": "06.11.2026 17:24"
+  "updatedAt": "06.11.2026 18:38"
 }
