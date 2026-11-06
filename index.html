@@ -98,7 +98,7 @@ const CONDITIONS = {
   thunderstorm: ['⛈️','Гроза'],
   freezing_rain: ['🌧️','Ледяной дождь']
 };
-const WIND_DIR = { nw:'СЗ', n:'С', ne:'СВ', e:'В', se:'ЮВ', s:'Ю', sw:'ЮЗ', w:'З' };
+const WIND_DIR = { nw:'северо-западный', n:'северный', ne:'северо-восточный', e:'восточный', se:'юго-восточный', s:'южный', sw:'юго-западный', w:'западный' };
 
 function tickClock(){
   const now = new Date();
@@ -116,13 +116,14 @@ async function loadWeather(){
     const r = await fetch('weather.json?t=' + Date.now(), { cache:'no-store' });
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const w = await r.json();
-    document.getElementById('temp').textContent = w.temperature + '°';
+    const t = (w.temperature === null || w.temperature === undefined) ? w.feelsLike : w.temperature;
+    document.getElementById('temp').textContent = t + '°';
     document.getElementById('feels').textContent = 'ощущается как ' + w.feelsLike + '°';
     document.getElementById('humidity').textContent = w.humidity;
-    document.getElementById('wind').textContent = w.windSpeed + ' м/с';
+    document.getElementById('wind').textContent = w.windSpeed;
     document.getElementById('windDir').textContent = 'м/с, ' + (WIND_DIR[w.windDir] || '');
     document.getElementById('pressure').textContent = w.pressureMm;
-    const c = CONDITIONS[w.condition] || ['🌡️', w.condition || ''];
+    const c = CONDITIONS[String(w.condition || '').replace(/-/g, '_')] || ['🌡️', w.condition || ''];
     document.getElementById('conditionIcon').textContent = c[0];
     document.getElementById('condition').textContent = c[1];
     document.getElementById('updated').textContent = 'Обновлено: ' + w.updatedAt;
