@@ -1,81 +1,141 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Погода</title>
-    <style>
-        /* ... (ваши стили остаются без изменений) ... */
-        body { font-family: sans-serif; background: #0f172a; color: #f8fafc; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; text-align: center; }
-        .widget { background: rgba(255, 255, 255, 0.06); padding: 60px 80px; border-radius: 32px; }
-        #city { font-size: 2.5rem; opacity: 0.8; margin-bottom: 10px; }
-        #temp { font-size: 6rem; font-weight: 200; line-height: 1.1; }
-        #desc { font-size: 1.8rem; opacity: 0.8; margin-top: 10px; text-transform: capitalize; }
-        .details { display: flex; gap: 40px; justify-content: center; font-size: 1.5rem; margin-top: 40px; }
-        .detail-item { display: flex; flex-direction: column; gap: 8px; }
-        .detail-label { font-size: 1.1rem; opacity: 0.6; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Погода — п. Октябрьский</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { height:100%; }
+  body {
+    font-family:'Segoe UI', Tahoma, sans-serif;
+    background: linear-gradient(160deg, #0b1e3a 0%, #123a6b 45%, #1b4f8a 100%);
+    color:#fff;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:space-between;
+    padding:4vh 6vw;
+    overflow:hidden;
+  }
+  .top { width:100%; display:flex; justify-content:space-between; align-items:flex-start; }
+  #place { font-size:4vh; opacity:.9; font-weight:300; }
+  .topright { text-align:right; }
+  #clock { font-size:9vh; font-weight:200; letter-spacing:2px; }
+  #date  { font-size:3vh; opacity:.8; margin-top:1vh; }
+  .main { text-align:center; }
+  #conditionIcon { font-size:13vh; line-height:1.1; }
+  #temp { font-size:20vh; font-weight:200; line-height:1.05; }
+  #feels { font-size:4vh; opacity:.85; margin-top:1vh; }
+  #condition { font-size:5vh; margin-top:2vh; font-weight:300; }
+  .cards { width:100%; display:flex; gap:3vw; justify-content:center; }
+  .card {
+    flex:1; max-width:22vw;
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.15);
+    border-radius:2vh;
+    padding:3vh 2vw;
+    text-align:center;
+  }
+  .card .label { font-size:2.6vh; opacity:.75; letter-spacing:1px; text-transform:uppercase; }
+  .card .value { font-size:6vh; font-weight:300; margin-top:1.5vh; }
+  .card .unit  { font-size:2.6vh; opacity:.7; margin-top:1vh; }
+  #updated { font-size:2.4vh; opacity:.6; }
+</style>
 </head>
 <body>
-    <div class="widget">
-        <div id="city">Октябрьский</div>
-        <div id="temp">--<sup>°C</sup></div>
-        <div id="desc">Загрузка...</div>
-        <div class="details">
-            <div class="detail-item"><span class="detail-label">Ветер</span><span id="wind">-- м/с</span></div>
-            <div class="detail-item"><span class="detail-label">Давление</span><span id="pressure">-- мм</span></div>
-            <div class="detail-item"><span class="detail-label">Влажность</span><span id="humidity">-- %</span></div>
-        </div>
+  <div class="top">
+    <div id="place">п. Октябрьский</div>
+    <div class="topright">
+      <div id="clock">--:--</div>
+      <div id="date">—</div>
     </div>
+  </div>
 
-    <script>
-        // Полный GraphQL-запрос со всеми нужными полями
-        const query = `
-        {
-          weatherByPoint(request: { lat: 56.2194, lon: 42.0431 }) {
-            now {
-              temperature
-              humidity
-              pressure
-              windSpeed
-              condition
-            }
-          }
-        }`;
+  <div class="main">
+    <div id="conditionIcon">⛅</div>
+    <div id="temp">--°</div>
+    <div id="feels">ощущается как --°</div>
+    <div id="condition">загрузка…</div>
+  </div>
 
-        const conditions = { /* ... ваш словарь переводов ... */ };
+  <div class="cards">
+    <div class="card">
+      <div class="label">Влажность</div>
+      <div class="value" id="humidity">--</div>
+      <div class="unit">%</div>
+    </div>
+    <div class="card">
+      <div class="label">Ветер</div>
+      <div class="value" id="wind">--</div>
+      <div class="unit" id="windDir">м/с</div>
+    </div>
+    <div class="card">
+      <div class="label">Давление</div>
+      <div class="value" id="pressure">--</div>
+      <div class="unit">мм рт. ст.</div>
+    </div>
+  </div>
 
-        async function fetchWeather() {
-            try {
-                const response = await fetch('https://weather-proxy.ustinovxx1985.workers.dev/', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query })
-                });
+  <div id="updated">Обновлено: —</div>
 
-                if (!response.ok) throw new Error(`HTTP error ${response.status}`);
-                const data = await response.json();
-                
-                // Проверка на наличие ошибок в ответе API
-                if (data.errors) {
-                    throw new Error(data.errors[0].message);
-                }
+<script>
+const CONDITIONS = {
+  clear: ['☀️','Ясно'],
+  partly_cloudy: ['⛅','Переменная облачность'],
+  cloudy: ['☁️','Облачно'],
+  overcast: ['☁️','Пасмурно'],
+  drizzle: ['🌦️','Морось'],
+  light_rain: ['🌦️','Небольшой дождь'],
+  rain: ['🌧️','Дождь'],
+  moderate_rain: ['🌧️','Умеренный дождь'],
+  heavy_rain: ['🌧️','Сильный дождь'],
+  continuous_heavy_rain: ['🌧️','Затяжной ливень'],
+  showers: ['🌧️','Ливень'],
+  wet_snow: ['🌨️','Дождь со снегом'],
+  light_snow: ['🌨️','Небольшой снег'],
+  snow: ['❄️','Снег'],
+  snow_showers: ['❄️','Снегопад'],
+  hail: ['🌨️','Град'],
+  thunderstorm: ['⛈️','Гроза'],
+  freezing_rain: ['🌧️','Ледяной дождь']
+};
+const WIND_DIR = { nw:'СЗ', n:'С', ne:'СВ', e:'В', se:'ЮВ', s:'Ю', sw:'ЮЗ', w:'З' };
 
-                const now = data.data.weatherByPoint.now;
-                document.getElementById('temp').innerHTML = `${now.temperature}<sup>°C</sup>`;
-                document.getElementById('desc').textContent = conditions[now.condition] || now.condition;
-                document.getElementById('wind').textContent = `${now.windSpeed} м/с`;
-                document.getElementById('pressure').textContent = `${now.pressure} мм`;
-                document.getElementById('humidity').textContent = `${now.humidity} %`;
+function tickClock(){
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2,'0');
+  const mm = String(now.getMinutes()).padStart(2,'0');
+  document.getElementById('clock').textContent = hh + ':' + mm;
+  const days = ['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'];
+  const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+  document.getElementById('date').textContent =
+    days[now.getDay()] + ', ' + now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear();
+}
 
-            } catch (error) {
-                console.error("Ошибка загрузки:", error);
-                document.getElementById('desc').textContent = "Ошибка данных";
-            }
-        }
+async function loadWeather(){
+  try {
+    const r = await fetch('weather.json?t=' + Date.now(), { cache:'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const w = await r.json();
+    document.getElementById('temp').textContent = w.temperature + '°';
+    document.getElementById('feels').textContent = 'ощущается как ' + w.feelsLike + '°';
+    document.getElementById('humidity').textContent = w.humidity;
+    document.getElementById('wind').textContent = w.windSpeed + ' м/с';
+    document.getElementById('windDir').textContent = 'м/с, ' + (WIND_DIR[w.windDir] || '');
+    document.getElementById('pressure').textContent = w.pressureMm;
+    const c = CONDITIONS[w.condition] || ['🌡️', w.condition || ''];
+    document.getElementById('conditionIcon').textContent = c[0];
+    document.getElementById('condition').textContent = c[1];
+    document.getElementById('updated').textContent = 'Обновлено: ' + w.updatedAt;
+  } catch (e) {
+    console.error('Ошибка загрузки погоды:', e);
+    document.getElementById('updated').textContent = 'Нет связи с данными погоды';
+  }
+}
 
-        fetchWeather();
-        setInterval(fetchWeather, 2 * 60 * 60 * 1000); // Обновление раз в 2 часа
-    </script>
+tickClock();
+setInterval(tickClock, 1000);
+loadWeather();
+setInterval(loadWeather, 60000);
+</script>
 </body>
 </html>
