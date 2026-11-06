@@ -2,9 +2,9 @@
   "temperature": 1,
   "feelsLike": -4,
   "humidity": 95,
-  "windSpeed": 4,
+  "windSpeed": 4.2,
   "windDir": "nw",
   "pressureMm": 742,
-  "condition": "overcast",
-  "updatedAt": "06.11.2026 16:37"
+  "condition": "wet-snow",
+  "updatedAt": "06.11.2026 16:50"
 }
