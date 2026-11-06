@@ -1,0 +1,54 @@
+name: Update Weather Data
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+jobs:
+  fetch-weather:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fetch weather from Yandex API
+        env:
+          YANDEX_API_KEY: ${{ secrets.YANDEX_API_KEY }}
+        run: |
+          curl -s --fail \
+            -H "X-Yandex-Weather-Key: $YANDEX_API_KEY" \
+            "https://api.weather.yandex.ru/v2/forecast?lat=56.2194&lon=42.0431&lang=ru_RU&hours=false&extra=false" \
+            -o weather-raw.json
+          echo "Ответ от Яндекса:"
+          cat weather-raw.json
+
+      - name: Build weather.json
+        run: |
+          jq '{
+            temperature: .fact.temperature,
+            feelsLike: .fact.feels_like,
+            humidity: .fact.humidity,
+            windSpeed: .fact.wind_speed,
+            windDir: .fact.wind_dir,
+            pressureMm: .fact.pressure_mm,
+            condition: .fact.condition,
+            updatedAt: (now | strftime("%d.%m.%Y %H:%M"))
+          }' weather-raw.json > weather.json
+          echo "Готовый файл:"
+          cat weather.json
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add weather.json
+          if git diff --cached --quiet; then
+            echo "Данных нет, нечего сохранять"
+          else
+            git commit -m "weather update [skip ci]"
+            git push
+          fi
