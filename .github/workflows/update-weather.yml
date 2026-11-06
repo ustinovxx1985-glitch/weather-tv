@@ -44,7 +44,7 @@ jobs:
             jq -s '
               .[0] as $old | .[1] as $new |
               $new | with_entries(
-                if .value == null and .key != "updatedAt" then $old[.key] else .value end
+                .value = (if .value == null and .key != "updatedAt" then $old[.key] else .value end)
               )
             ' weather.json weather-new.json > weather-merged.json
             mv weather-merged.json weather.json
