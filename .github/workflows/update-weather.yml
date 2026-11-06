@@ -2,7 +2,7 @@ name: Update Weather Data
 
 on:
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '0 * * * *'
   workflow_dispatch:
 
 jobs:
@@ -30,14 +30,28 @@ jobs:
         run: |
           jq '{
             temperature: (.fact.temperature // .fact.feels_like),
-            feelsLike: .fact.feels_like,
+            feelsLike: (.fact.feels_like // .fact.temperature),
             humidity: .fact.humidity,
             windSpeed: .fact.wind_speed,
             windDir: .fact.wind_dir,
             pressureMm: .fact.pressure_mm,
             condition: .fact.condition,
             updatedAt: ((now + 10800) | strftime("%d.%m.%Y %H:%M"))
-          }' weather-raw.json > weather.json
+          }' weather-raw.json > weather-new.json
+          echo "Свежие данные:"
+          cat weather-new.json
+          if [ -f weather.json ]; then
+            jq -s '
+              .[0] as $old | .[1] as $new |
+              $new | with_entries(
+                if .value == null and .key != "updatedAt" then $old[.key] else .value end
+              )
+            ' weather.json weather-new.json > weather-merged.json
+            mv weather-merged.json weather.json
+          else
+            mv weather-new.json weather.json
+          fi
+          rm -f weather-new.json
           echo "Готовый файл:"
           cat weather.json
 
