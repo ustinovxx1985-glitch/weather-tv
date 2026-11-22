@@ -1,10 +1,10 @@
 {
   "temperature": 0,
   "feelsLike": -5,
-  "humidity": 81,
+  "humidity": 86,
   "windSpeed": 3.4,
   "windDir": "sw",
   "pressureMm": 742,
-  "condition": "cloudy",
-  "updatedAt": "22.11.2026 21:12"
+  "condition": "partly-cloudy",
+  "updatedAt": "22.11.2026 23:08"
 }
